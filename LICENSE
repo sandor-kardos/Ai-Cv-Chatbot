@@ -1,0 +1,21 @@
+# WordPress
+wp-config.php
+wp-content/uploads/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node (if any tooling added)
+node_modules/
+npm-debug.log
+
+# Build artifacts
+*.zip

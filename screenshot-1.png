@@ -1,0 +1,224 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ── CSS Variables (set by PHP inline style based on bg_mode) ── */
+:root {
+    --cv-response-color:     #f3f4f6;
+    --cv-initial-color:      #9ca3af;
+    --cv-input-bg:           #374151;
+    --cv-input-color:        #f3f4f6;
+    --cv-input-border:       #4b5563;
+    --cv-input-border-focus: #d8ff88;
+}
+
+/* ── Widget ── */
+.cv-chatbot-widget {
+    font-family: 'Inter', sans-serif;
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+    background: transparent;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ── CSS custom properties for animated border ── */
+@property --cv-hue {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0;
+}
+@property --cv-border-rotate {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+}
+
+/* ── Input row ── */
+.cv-input-container {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    border-radius: 30px;
+    padding: 1px;
+    /* Rotating conic gradient — brand lime + off-white + near-black */
+    background: conic-gradient(
+        from var(--cv-border-rotate),
+        #d8ff88 0deg,
+        #d8ff8860 40deg,
+        #ffffff18 100deg,
+        #1a1a1a 160deg,
+        #ffffff10 220deg,
+        #d8ff8840 280deg,
+        #d8ff88 360deg
+    );
+    animation: cv-border-rotate 5s linear infinite;
+}
+
+.cv-input-container::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: 28px;
+    background: var(--cv-input-bg, #374151);
+    z-index: 0;
+}
+
+/* Push input and button above the pseudo bg */
+.cv-search-input,
+.cv-search-button {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes cv-border-rotate {
+    from { --cv-border-rotate: 0deg;   }
+    to   { --cv-border-rotate: 360deg; }
+}
+
+.cv-search-input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid transparent;
+    border-radius: 25px;
+    padding: 1rem 1.5rem;
+    outline: none;
+    font-size: 1rem;
+    background-color: transparent;
+    color: var(--cv-input-color);
+    transition: border-color .2s;
+    font-family: inherit;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+}
+.cv-search-input:focus          { border-color: transparent; }
+.cv-search-input::placeholder   { color: var(--cv-initial-color); opacity: 1; }
+
+/* ── Button ── */
+.cv-search-button {
+    background-color: #d8ff88;
+    color: #1f2937;
+    padding: 1rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+}
+.cv-search-button:hover:not(:disabled) { background-color: #c7f27b; }
+.cv-search-button:disabled             { background-color: #9ca3af; cursor: not-allowed; }
+.cv-search-button svg                  { width: 16px; height: 16px; }
+
+/* ── Response area ── */
+.cv-response-area {
+    background: transparent;
+    padding: 1rem 0;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.cv-response-text {
+    white-space: pre-wrap;
+    font-size: .875rem;
+    line-height: 1.6;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-indent: 0 !important;
+    color: var(--cv-response-color);
+    width: 100%;
+    text-align: left !important;
+    display: block;
+}
+/* Override any theme paragraph styles that might indent */
+.cv-chatbot-widget p,
+.cv-chatbot-widget .cv-response-text {
+    margin: 0 !important;
+    padding: 0 !important;
+    text-indent: 0 !important;
+}
+.cv-initial-text { color: var(--cv-initial-color); font-style: italic; }
+
+/* ── CTA ── */
+.cv-cta-text {
+    margin-top: .75rem !important;
+    padding: 0 !important;
+    font-style: normal;
+    color: #d8ff88;
+    font-weight: 400;
+    font-size: .875rem;
+    line-height: 1.6;
+    text-align: left !important;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: .35rem;
+    width: 100%;
+    text-indent: 0 !important;
+}
+.cv-cta-text a {
+    color: #d8ff88;
+    text-decoration: underline;
+    white-space: nowrap;
+    font-size: .875rem;
+    line-height: 1.6;
+}
+.cv-cta-text a:hover { color: #c7f27b; }
+.cv-cta-sep          { color: #4b5563; font-style: normal; }
+
+/* ── Loading ── */
+.cv-loading-indicator {
+    color: var(--cv-initial-color);
+    font-style: italic;
+    font-size: .875rem;
+    animation: cv-pulse 1.4s ease-in-out infinite;
+}
+@keyframes cv-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ── Error ── */
+.cv-error { color: #fca5a5; font-style: italic; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .cv-chatbot-widget { max-width: 100%; }
+    .cv-search-input   { font-size: 16px; padding: .875rem 1rem; }
+    .cv-search-button  { width: 44px; height: 44px; }
+    .cv-response-text  { font-size: .8125rem; }
+}
+@media (max-width: 480px) {
+    .cv-input-container { gap: .5rem; }
+    .cv-search-input    { padding: .75rem .875rem; }
+    .cv-search-button   { width: 40px; height: 40px; }
+}
+
+/* ── Accessibility ── */
+@media (prefers-contrast: high) {
+    .cv-search-input        { border-width: 2px; }
+    .cv-search-input:focus  { box-shadow: 0 0 0 3px rgba(216,255,136,.5); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .cv-search-button, .cv-search-input { transition: none; }
+    .cv-loading-indicator               { animation: none; }
+    .cv-input-container                 { animation: none; }
+}
+
+/* ── Firefox ── */
+.cv-search-input::-moz-placeholder { color: var(--cv-initial-color); opacity: 1; }
+@-moz-document url-prefix() {
+    .cv-search-input  { -moz-appearance: none; border-radius: 25px !important; flex: 1 !important; min-width: 0 !important; box-sizing: border-box !important; }
+    .cv-search-button { flex-shrink: 0 !important; width: 52px !important; height: 52px !important; }
+}
