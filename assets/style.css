@@ -1,0 +1,459 @@
+/*
+ * Optimization 1: Google Fonts @import removed.
+ * The site already hosts Inter locally — font-family: 'Inter', sans-serif
+ * inherits it automatically. No external network request is made.
+ *
+ * Optimization 4: font-display: swap
+ * This plugin no longer loads any fonts, so there are no @font-face
+ * declarations here to annotate. Ensure the theme's @font-face for Inter
+ * includes font-display: swap. The removed @import already had &display=swap
+ * in its query string, so no regression occurs.
+ */
+
+/* ── Widget container ── */
+.cv-chatbot-widget {
+    font-family: 'Inter', sans-serif;
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+    background-color: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    color: var(--cv-response-color, #f3f4f6);
+}
+
+/* Background mode variants */
+.cv-bg-light .cv-search-input {
+    background-color: #f9fafb;
+    color: #1f2937;
+    border-color: #d1d5db;
+}
+.cv-bg-light .cv-response-area {
+    color: #1f2937;
+}
+.cv-bg-dark .cv-search-input {
+    background-color: #1f2937;
+    color: #f3f4f6;
+    border-color: #374151;
+}
+.cv-bg-dark .cv-response-area {
+    color: #f3f4f6;
+}
+
+/* Focus state */
+.cv-chatbot-widget.cv-focused {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+    .cv-chatbot-widget.cv-focused { transform: none; }
+}
+
+/*
+ * Optimization 2: GPU-accelerated spinning border.
+ *
+ * BEFORE (broken — non-composited, causes CPU jank / Lighthouse flag):
+ *   @property --cv-border-rotate { syntax: '<angle>'; ... }
+ *   @keyframes { to { --cv-border-rotate: 360deg; } }
+ *   CSS custom properties cannot be promoted to the GPU compositor,
+ *   so the browser recalculates style + layout on every frame.
+ *
+ * AFTER (fixed — transform: rotate() runs entirely on the GPU compositor):
+ *   An oversized ::before pseudo-element on .cv-input-wrapper holds the
+ *   conic gradient. Only transform: rotate() is animated — a composited
+ *   property that never touches the main thread.
+ *   overflow: hidden on .cv-input-wrapper clips the overflowing pseudo.
+ *   will-change: transform promotes the layer to the GPU upfront.
+ */
+
+/* Outer wrapper — owns the spinning border visual */
+.cv-input-wrapper {
+    position: relative;
+    border-radius: 30px;  /* 5px more than input's 25px to give border room */
+    padding: 2px;         /* visible border thickness */
+    overflow: hidden;     /* clips the oversized rotating pseudo-element */
+}
+
+/* The spinning conic gradient — rendered entirely on the GPU compositor */
+.cv-input-wrapper::before {
+    content: '';
+    position: absolute;
+    /* 200% × 200% square centred on the wrapper. During rotation every
+       corner of the wrapper always stays inside this square, so the
+       conic gradient covers the full perimeter at all angles. */
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: conic-gradient(
+        from 0deg,
+        #d8ff88 0deg,
+        transparent 90deg,
+        transparent 270deg,
+        #d8ff88 360deg
+    );
+    animation: cv-border-spin 4s linear infinite;
+    will-change: transform;   /* promotes to GPU layer */
+    transform-origin: center;
+}
+
+@keyframes cv-border-spin {
+    to { transform: rotate(360deg); }   /* composited — GPU only, zero main-thread work */
+}
+
+/* Reduced-motion: keep the border visible but stop spinning */
+@media (prefers-reduced-motion: reduce) {
+    .cv-input-wrapper::before {
+        animation: none;
+    }
+}
+
+/* Legacy alias */
+.chatbot-widget {
+    font-family: 'Inter', sans-serif;
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+    background-color: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    color: #f3f4f6;
+}
+
+.cv-input-container {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-align: center;
+    -moz-box-align: center;
+    -ms-flex-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.cv-search-input {
+    -webkit-box-flex: 1;
+    -moz-box-flex: 1;
+    -ms-flex: 1;
+    -webkit-flex: 1;
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #4b5563;
+    border-radius: 25px;
+    padding: 1rem 1.5rem;
+    outline: none;
+    font-size: 1rem;
+    background-color: #f9fafb;
+    color: #1f2937;
+    transition: border-color 0.2s ease-in-out;
+    font-family: inherit;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.cv-search-input:focus {
+    border-color: #d8ff88;
+}
+
+.cv-search-input::placeholder {
+    color: #6b7280;
+    opacity: 1;
+}
+
+/* Search button styling */
+.cv-search-button {
+    background-color: #d8ff88;
+    color: #1f2937;
+    padding: 1rem;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    width: 52px;
+    height: 52px;
+    flex-shrink: 0;
+}
+
+.cv-search-button:hover:not(:disabled) {
+    background-color: #c7f27b;
+}
+
+.cv-search-button:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.cv-search-button svg {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+/* Response area styling */
+.cv-response-area {
+    background-color: transparent;
+    border-radius: 0;
+    padding: 1rem 0;
+    color: #f3f4f6;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* Response text styling */
+.cv-response-text {
+    white-space: pre-wrap;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin: 0;
+    color: var(--cv-response-color, #f3f4f6);
+}
+
+.cv-initial-text {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* CTA styling */
+.cv-cta-text {
+    margin-top: 1rem;
+    font-style: italic;
+    color: #d8ff88;
+    font-weight: 500;
+    text-align: center;
+    width: 100%;
+}
+
+.cv-cta-text a {
+    color: #d8ff88;
+    text-decoration: underline;
+}
+
+.cv-cta-text a:hover {
+    color: #c7f27b;
+}
+
+/* Loading animation */
+.cv-loading-indicator {
+    text-align: center;
+    color: #9ca3af;
+    font-style: italic;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Error state */
+.cv-error {
+    color: #fca5a5;
+    font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .cv-chatbot-widget {
+        padding: 1rem;
+        max-width: 100%;
+    }
+    
+    .cv-search-input {
+        font-size: 16px; /* Prevent zoom on iOS */
+        padding: 0.875rem 1rem;
+    }
+    
+    .cv-search-button {
+        width: 44px;
+        height: 44px;
+        padding: 0.625rem;
+    }
+    
+    .cv-search-button svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .cv-response-area {
+        padding: 0.875rem;
+        min-height: 80px;
+    }
+    
+    .cv-response-text {
+        font-size: 0.8125rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .cv-chatbot-widget {
+        padding: 0.75rem;
+    }
+    
+    .cv-input-container {
+        gap: 0.5rem;
+    }
+    
+    .cv-search-input {
+        padding: 0.75rem 0.875rem;
+    }
+    
+    .cv-search-button {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .cv-search-input {
+        border-width: 2px;
+    }
+    
+    .cv-search-input:focus {
+        box-shadow: 0 0 0 3px rgba(216, 255, 136, 0.5);
+    }
+    
+    .cv-response-area {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .cv-search-button,
+    .cv-search-input,
+    .cv-response-area,
+    .cv-response-area a {
+        transition: none;
+    }
+    
+    .cv-search-button:hover {
+        transform: none;
+    }
+    
+    @keyframes cv-spin {
+        to {
+            transform: none;
+        }
+    }
+}
+
+/* Firefox compatibility fixes */
+@-moz-document url-prefix() {
+    .cv-search-input {
+        -moz-appearance: none;
+        background-color: #f9fafb !important;
+        border: 1px solid #4b5563 !important;
+        border-radius: 25px !important;
+        padding: 1rem 1.5rem !important;
+        font-size: 1rem !important;
+        width: auto !important;
+        flex: 1 !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+    
+    .cv-input-container {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.75rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    .chatbot-widget {
+        width: 100% !important;
+        max-width: 600px !important;
+        box-sizing: border-box !important;
+    }
+    
+    .cv-search-button {
+        flex-shrink: 0 !important;
+        width: 52px !important;
+        height: 52px !important;
+    }
+}
+
+/* Additional Firefox specific styles */
+.cv-search-input::-moz-placeholder {
+    color: #6b7280;
+    opacity: 1;
+}
+
+.cv-search-input::-webkit-input-placeholder {
+    color: #6b7280;
+    opacity: 1;
+}
+
+.cv-search-input:-ms-input-placeholder {
+    color: #6b7280;
+    opacity: 1;
+}
+
+/* Additional Firefox fixes */
+@supports (-moz-appearance: none) {
+    .cv-input-container {
+        display: -moz-box;
+        display: -webkit-flex;
+        display: flex;
+        -moz-box-align: center;
+        -webkit-align-items: center;
+        align-items: center;
+    }
+    
+    .cv-search-input {
+        -moz-box-flex: 1;
+        -webkit-flex: 1;
+        flex: 1;
+        min-width: 0;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+    
+    .cv-search-button {
+        -moz-box-flex: 0;
+        -webkit-flex: 0 0 auto;
+        flex: 0 0 auto;
+    }
+}
+
+/* Dark mode compatibility */
+@media (prefers-color-scheme: dark) {
+    .cv-search-input {
+        background-color: #374151;
+        color: #f3f4f6;
+        border-color: #6b7280;
+    }
+    
+    .cv-search-input::placeholder {
+        color: #9ca3af;
+    }
+    
+    .cv-search-input:focus {
+        border-color: #d8ff88;
+        background-color: #4b5563;
+    }
+}
